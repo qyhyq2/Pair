@@ -13,6 +13,8 @@ public class Person {
 	private int expectLooks;
 	private int expectCharacter;
 	private int expectWealth;
+	private Person target = null;
+	private int targetScore = 0;
 	
 	public Person(int id,int looks,int character,int wealth,
 			int expectLooks,int expectCharacter,int expectWealth){
@@ -52,6 +54,22 @@ public class Person {
 
 	public int getExpectCharacter() {
 		return expectCharacter;
+	}
+
+	public Person getTarget() {
+		return target;
+	}
+
+	public void setTarget(Person target) {
+		this.target = target;
+	}
+
+	public int getTargetScore() {
+		return targetScore;
+	}
+
+	public void setTargetScore(int targetScore) {
+		this.targetScore = targetScore;
 	}
 
 	@Override
