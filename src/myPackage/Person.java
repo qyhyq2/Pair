@@ -8,8 +8,8 @@ package myPackage;
 public class Person {
 	private int id;
 	private int looks;
-	private int wealth;
 	private int character;
+	private int wealth;
 	private int expectLooks;
 	private int expectCharacter;
 	private int expectWealth;
