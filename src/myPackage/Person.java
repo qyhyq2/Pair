@@ -1,7 +1,8 @@
 package myPackage;
 /**
  * @class Person
- * @description 
+ * @description Each person has his id,looks,character,wealth,exceptLooks,
+ * 				expectCharacter,expectWealth.etc
  * @author qyh
  *
 */
@@ -16,6 +17,16 @@ public class Person {
 	private Person target = null;
 	private int targetScore = 0;
 	
+	/**
+	 * Constructor
+	 * @param id
+	 * @param looks
+	 * @param character
+	 * @param wealth
+	 * @param expectLooks
+	 * @param expectCharacter
+	 * @param expectWealth
+	 */
 	public Person(int id,int looks,int character,int wealth,
 			int expectLooks,int expectCharacter,int expectWealth){
 		this.id = id;

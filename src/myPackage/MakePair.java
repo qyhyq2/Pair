@@ -6,8 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
+/**
+ * @author qyh
+ *
+ */
 public class MakePair {
+	private static final String MALE_FILE_PATH = "attachments\\male.txt";
+	private static final String FEMALE_FILE_PATH = "attachments\\female.txt";
+	private static final String PLAY_FILE_PATH = "attachments\\players.txt";
 	private static final int NUM_OF_EACH_GENDER = 100;
 	private static ArrayList<Person> male = new ArrayList<Person>(NUM_OF_EACH_GENDER);
 	private static ArrayList<Person> female = new ArrayList<Person>(NUM_OF_EACH_GENDER);
@@ -15,27 +23,60 @@ public class MakePair {
 	private static boolean IsPlayerMale; 
 	static int[] voteBox = new int[101]; //to record the number of voter for each female
 	
-	
 	/**
-	 * Main method
-	 * @param args
+	 * Set data using specific file data
+	 * the player's attribution is also read from lineNumber line of file 
+	 * @param lineNumber
 	 */
-	public static void main(String[] args) {
-		readFileToPerson("attachments\\male.txt",male);
-		readFileToPerson("attachments\\female.txt",female);
-		player = readFileToPlayer("attachments\\players.txt", 2);
-		System.out.println(getResult());
-//		System.out.println(player+"\t"+IsPlayerMale);
-//		for(Person s :getOnePair()){
-//			System.out.println(s);
-//		}
+	public static void usingFileData(int lineNumber) {
+		readFileToPerson(MALE_FILE_PATH,male);
+		readFileToPerson(FEMALE_FILE_PATH,female);
+		player = readFileToPlayer(PLAY_FILE_PATH, lineNumber);
 	}
 	
 	/**
-	 * add player to the matching and get the result
-	 * @return Person ,the final result
+	 * Set data using random data
+	 * the player's attribution is gained by input
+	 * @param lineNumber
 	 */
-	private static Person getResult(){
+	public static void usingRandomData(String attribution){
+		String id = "-1,";
+		String gender = attribution.substring(0,2);
+		if(gender.equals("1")){
+			IsPlayerMale = true;
+		}
+		else{
+			IsPlayerMale = false;
+		}
+		player = createPerson(id.concat(attribution.substring(2)));
+		setRandomData();
+	}
+	
+	/**
+	 * Show all the result of the matching,just for testing
+	 * 
+	 */
+	public static void showAllResult(){
+		if(IsPlayerMale){
+			male.add(player);
+		}
+		else{
+			female.add(player);
+		}
+		Person[] onePair;
+		for(int i=0;i<100;i++){
+			onePair = getOnePair();
+			System.out.println(onePair[0]+"----"+onePair[1]);
+			male.remove(onePair[0]);
+			female.remove(onePair[1]);
+		}
+	}
+	
+	/**
+	 * Add player to the matching and get the result
+	 * @return Person ,the player's partner
+	 */
+	public static Person getMatcher(){
 		if(IsPlayerMale){
 			male.add(player);
 		}
@@ -62,11 +103,12 @@ public class MakePair {
 	}
 	
 	/**
-	 * Read data from file of path,and set the data to player of specific number
+	 * Read data from file of path,and set the data to player of specific line number
+	 * line Number is begin from 1
 	 * @param path
 	 * @param p
 	 */
-	private static Person readFileToPlayer (String path,int number) {
+	private static Person readFileToPlayer (String path,int lineNumber) {
 		Person player = null;
 		FileReader fr = null ;
 		BufferedReader br = null;
@@ -76,7 +118,7 @@ public class MakePair {
 			String line ;
 			String[] val;
 			for(int i=0;i<NUM_OF_EACH_GENDER;i++){
-				if(i == number-1){
+				if(i == lineNumber-1){
 					line =br.readLine();
 					val = line.split(",");
 					if(val[0].equals("0")){
@@ -170,36 +212,37 @@ public class MakePair {
 	
 	/**
 	 * Calculate the the score of targetPerson to sourcePerson,
-	 * adding NUM_OF_EACH_GENDER-targetPerson.getId() to guaranteer that the play 
-	 * who has smaller id is prior to bigger one while they have same score
+	 * adding some weight to guaranteer that the play who has 
+	 * bigger total value and smaller id is prior 
 	 * @param targetPerson
 	 * @param sourcePerson
 	 * @return the score of targetPerson to sourcePerson
 	 */
 	private static int calculate(Person targetPerson,Person sourcePerson){
-		return (sourcePerson.getExpectLooks()*targetPerson.getLooks() 
+		return ((sourcePerson.getExpectLooks()*targetPerson.getLooks() 
 				+ sourcePerson.getExpectCharacter()*targetPerson.getCharacter()
-				+ sourcePerson.getExpectWealth()*targetPerson.getWealth()
-				+(NUM_OF_EACH_GENDER-targetPerson.getId()));
+				+ sourcePerson.getExpectWealth()*targetPerson.getWealth())*300*100
+				+ (targetPerson.getLooks()+ targetPerson.getCharacter()
+				+ targetPerson.getWealth())*100 +(NUM_OF_EACH_GENDER-targetPerson.getId()));
 	}
 	
 	/**
-	 * Get one pair according to the specific rule
+	 * Get one matching pair according to the specific rule
 	 * @return Person[], index 0 is male,index 1 is female
 	 */
-	private static Person[] getOnePair(){
+	public static Person[] getOnePair(){
 		//males vote one who has the highest score in exists females
 		//meanwhile female can record the male who has the highest score among voters
-		int voteeIndex = 0,score;
+		int voteeIndex,score;
 		int size = female.size();
 		initializeVote(voteBox,0,size);
 		for(Person voter:male){
 			if(voter.getTarget()== null || (!female.contains(voter.getTarget()))){
-				voteeIndex = getHighestScoreFemale(female,voter);
+				setHighestScoreFemale(voter);
 			}
-			else{//if the highest score female is still existing,it's no need to calculate again
-				voteeIndex = female.indexOf(voter.getTarget());
-			}
+			
+			voteeIndex = female.indexOf(voter.getTarget());
+			
 			voteBox[voteeIndex]++;
 			score = calculate(voter, female.get(voteeIndex));
 			if(score>female.get(voteeIndex).getTargetScore()){
@@ -208,9 +251,9 @@ public class MakePair {
 			}
 		}
 		
-		//find the female who is most popular
+		//find the female who is the most popular
 		int index = 0;
-		for(int i=0;i<size;i++){
+		for(int i=1;i<size;i++){
 			if(compareVote(i,index,voteBox,female)>0){
 				index = i;
 			}
@@ -222,14 +265,14 @@ public class MakePair {
 	
 	/**
 	 * Compare two female's voteBox to find the winner according to the rule that 
-	 * the one who has higher summary of attributions and smaller id will win
-	 * @param index1
+	 * the one who has higher summary of attributions and smaller id will win when 
+	 * having the same votes
+	 * @param index1 
 	 * @param index2
 	 * @param voteBox
-	 * @param female
 	 * @return
 	 */
-	private static int compareVote(int index1,int index2,int[] voteBox,ArrayList<Person> female){
+	public static int compareVote(int index1,int index2,int[] voteBox,ArrayList<Person> female){
 		Person f1 = female.get(index1);
 		Person f2 = female.get(index2);
 		if(voteBox[index1]>voteBox[index2]){
@@ -255,22 +298,21 @@ public class MakePair {
 	}
 	
 	/**
-	 * For specific male,get a female who is mostly fitted his expectation in remaining females 
-	 * @param remainingFemale
-	 * @param male
-	 * @return the index of female in ArrayList
+	 * For specific male,set a female who is mostly fitted his expectation to his target
+	 * in remaining females 
+	 * @param man
 	 */
-	private static int getHighestScoreFemale(ArrayList<Person> remainingFemale,Person male){
-		int maxScore = 0,score;
-		int targetIndex = -1;
-		for(int i=0;i<remainingFemale.size();i++){
-			score = calculate(female.get(i),male);
-			if(score>maxScore){
-				targetIndex = i;
-				maxScore = score;
+	public static void setHighestScoreFemale(Person man){
+		int score;
+		man.setTarget(null);
+		man.setTargetScore(0);
+		for(int i=0;i<female.size();i++){
+			score = calculate(female.get(i),man);
+			if(score>man.getTargetScore()){
+				man.setTargetScore(score);
+				man.setTarget(female.get(i));
 			}			
 		}
-		return targetIndex;
 	}
 	
 	/**
@@ -284,4 +326,37 @@ public class MakePair {
 			a[i] = value;
 		}
 	}
+	
+	/**
+	 * Set random generated data to male and female
+	 */
+	private static void setRandomData(){
+		male = generateRandomData();
+		female = generateRandomData();
+	}
+	
+	/**
+	 * Generate NUM_OF_EACH_GENDER person with random value between [1,98]
+	 * @return ArrayList<Person>
+	 */
+	private static ArrayList<Person> generateRandomData(){
+		ArrayList<Person> persons = new ArrayList<Person>();
+		Random ran = new Random();
+		for(int i=0;i<NUM_OF_EACH_GENDER;i++){
+			persons.add(new Person(i,ran.nextInt(98)+1,ran.nextInt(98)+1,ran.nextInt(98)+1,
+					ran.nextInt(98)+1,ran.nextInt(98)+1,ran.nextInt(98)+1));
+		}
+		return persons;
+	}
+	
+	/**
+	 * Clear all the data
+	 */
+	public static void clearData(){
+		female.clear();
+		male.clear();
+		player = null;
+	}
+	
+	
 }
