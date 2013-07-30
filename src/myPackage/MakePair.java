@@ -340,11 +340,15 @@ public class MakePair {
 	 * @return ArrayList<Person>
 	 */
 	private static ArrayList<Person> generateRandomData(){
+		int el,ew,ec;
 		ArrayList<Person> persons = new ArrayList<Person>();
 		Random ran = new Random();
 		for(int i=0;i<NUM_OF_EACH_GENDER;i++){
+			el = ran.nextInt(100)+1;
+			ew = ran.nextInt(100-el)+1;
+			ec = 100 - el - ew;
 			persons.add(new Person(i,ran.nextInt(98)+1,ran.nextInt(98)+1,ran.nextInt(98)+1,
-					ran.nextInt(98)+1,ran.nextInt(98)+1,ran.nextInt(98)+1));
+					el,ec,ew));
 		}
 		return persons;
 	}
